@@ -9,8 +9,11 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 # ── CONSTANTS ─────────────────────────────────────────────────────────────────
-HS_TOKEN  = st.secrets.get("HUBSPOT_TOKEN", "")
-HS_HDR    = {"Authorization": f"Bearer {HS_TOKEN}", "Content-Type": "application/json"}
+def _hs_token():
+    return st.secrets.get("HUBSPOT_TOKEN", "")
+
+def _hs_hdr():
+    return {"Authorization": f"Bearer {_hs_token()}", "Content-Type": "application/json"}
 SHEET_ID     = "1yVCqrFGQKAAv2OJQm595LPi4v7frFM6KOU8iVRXLU3U"
 SOCIAL_SID   = "1r5h47A5d8BVkhapt21CVNoKpxODKb1CcZ-TSbRZNqro"
 JAWWAD = "79357033"
@@ -85,12 +88,12 @@ def parse_aloware(activity_bytes, users_bytes):
 
 # ── HUBSPOT HELPERS ───────────────────────────────────────────────────────────
 def hs_post(url, payload):
-    r = requests.post(url, headers=HS_HDR, json=payload)
+    r = requests.post(url, headers=_hs_hdr(), json=payload)
     r.raise_for_status()
     return r.json()
 
 def hs_get(url, params=None):
-    r = requests.get(url, headers=HS_HDR, params=params)
+    r = requests.get(url, headers=_hs_hdr(), params=params)
     r.raise_for_status()
     return r.json()
 
