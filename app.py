@@ -443,8 +443,8 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
     b_err, b_tot = d["batch_bad"], d["batch_total"]
     ber_pct  = f"{b_err/b_tot*100:.1f}%" if b_tot else "N/A"
     accounts = str(d["accounts"]); contacts_n = str(d["contacts"])
-    # enrichment quality: pickups / contacts
-    eq_pct = pct(t_pick, d["contacts"]) if d["contacts"] else "N/A"
+    # enrichment quality: pickups / dials (connect rate)
+    eq_pct = pct(t_pick, t_dials) if t_dials else "N/A"
 
     date_range = f"{monday.strftime('%B')} {monday.day}–{friday.day}, {friday.year}"
 
@@ -781,8 +781,9 @@ if "results" in st.session_state:
     st.subheader("Sales Support")
     b_bad = OV["batch_bad"]; b_tot = OV["batch_total"]
     t_pick = OV["aloware"][JAWWAD]["pickups"] + OV["aloware"][MOHSIN]["pickups"]
+    t_dials_eq = OV["aloware"][JAWWAD]["dials"] + OV["aloware"][MOHSIN]["dials"]
     ber = f"{b_bad/b_tot*100:.1f}%" if b_tot else "N/A"
-    eq  = f"{t_pick/OV['contacts']*100:.1f}%" if OV["contacts"] else "N/A"
+    eq  = f"{t_pick/t_dials_eq*100:.1f}%" if t_dials_eq else "N/A"
 
     ss_data = pd.DataFrame([
         {"Metric": "New Accounts Prospected",           "Value": str(OV["accounts"]),  "Status": color("accounts",     OV["accounts"])},
