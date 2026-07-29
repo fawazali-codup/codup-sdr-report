@@ -436,10 +436,6 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
     m_pipe  = sum(e["amount"] for e in d["pipeline"][m])
     t_pipe  = j_pipe + m_pipe
 
-    j_qr    = pct(d["mbo_count"][j], d["completions_count"][j])
-    m_qr    = pct(d["mbo_count"][m], d["completions_count"][m])
-    t_qr    = pct(t_mbo, t_comp)
-
     b_err, b_tot = d["batch_bad"], d["batch_total"]
     ber_pct  = f"{b_err/b_tot*100:.1f}%" if b_tot else "N/A"
     accounts = str(d["accounts"]); contacts_n = str(d["contacts"])
@@ -478,7 +474,6 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
         ["Meetings Confirmed (Inbound)",       str(t_conf),  "—","—","—","— (reading)"],
         ["Meetings Held",                      str(t_held),  ">= 2",    "60-70% show rate","50%","40%"],
         ["New Qualified Pipeline",             fmt_amt(t_pipe), "$50,000","—","—","—"],
-        ["Qualification Rate",                 t_qr,         "> 30%",   "—","—","— (reading)"],
         [],
         ["JAWWAD RASOOL"],
         ["Metric", "Value"],
@@ -498,7 +493,6 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
         ["Meetings Confirmed (Inbound)",       str(j_conf)],
         ["Meetings Held",                      str(j_held)],
         ["New Qualified Pipeline",             fmt_amt(j_pipe)],
-        ["Qualification Rate",                 j_qr],
         [],
         ["MOHSIN ALI KHAN"],
         ["Metric", "Value"],
@@ -518,7 +512,6 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
         ["Meetings Confirmed (Inbound)",       str(m_conf)],
         ["Meetings Held",                      str(m_held)],
         ["New Qualified Pipeline",             fmt_amt(m_pipe)],
-        ["Qualification Rate",                 m_qr],
     ]
 
     svc.spreadsheets().values().update(
@@ -813,8 +806,6 @@ if "results" in st.session_state:
     j_pipe_amt = sum(e["amount"] for e in OV["pipeline"][JAWWAD])
     m_pipe_amt = sum(e["amount"] for e in OV["pipeline"][MOHSIN])
     t_pipe  = j_pipe_amt + m_pipe_amt
-    t_qr    = _pct(t_mbo, t_comp)
-
     rollup_rows = [
         ("Total Dials",                        str(t_dials),  color("dials",t_dials)),
         ("Pickups",                            str(t_pick2),  ""),
@@ -832,7 +823,6 @@ if "results" in st.session_state:
         ("Meetings Confirmed (Inbound)",       str(t_conf),   ""),
         ("Meetings Held",                      str(t_held),   color("held",t_held)),
         ("New Qualified Pipeline",             f"${t_pipe:,.0f}", color("pipeline",t_pipe)),
-        ("Qualification Rate",                 t_qr,          ""),
     ]
     st.dataframe(
         pd.DataFrame(rollup_rows, columns=["Metric","Value","Status"]),
@@ -856,7 +846,6 @@ if "results" in st.session_state:
         j_conf2  = OV["conf_count"][sdr_id]
         j_held2  = OV["held_count"][sdr_id]
         j_pipe2  = sum(e["amount"] for e in OV["pipeline"][sdr_id])
-        j_qr2    = _pct(j_mbo2, j_comp2)
 
         sdr_rows = [
             ("Total Dials",                        str(j_dials2)),
@@ -875,7 +864,6 @@ if "results" in st.session_state:
             ("Meetings Confirmed (Inbound)",       str(j_conf2)),
             ("Meetings Held",                      str(j_held2)),
             ("New Qualified Pipeline",             f"${j_pipe2:,.0f}"),
-            ("Qualification Rate",                 j_qr2),
         ]
         st.dataframe(
             pd.DataFrame(sdr_rows, columns=["Metric","Value"]),
