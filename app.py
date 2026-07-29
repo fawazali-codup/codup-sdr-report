@@ -729,6 +729,17 @@ if "results" in st.session_state:
     OV = st.session_state["overrides"]
     week = R["week"]
 
+    # Sync any override widget values into OV before computing rollup or per-SDR tables.
+    # Widget states are set on previous renders; reading them here ensures both the
+    # rollup (above the inputs) and per-SDR sections (below) use the same updated values.
+    _ov_keys = ["completions_count", "pos_count", "mbo_count", "mbsp_count",
+                "mbi_count", "conf_count", "held_count"]
+    for _k in _ov_keys:
+        if f"ov_{_k}_j" in st.session_state:
+            OV[_k][JAWWAD] = st.session_state[f"ov_{_k}_j"]
+        if f"ov_{_k}_m" in st.session_state:
+            OV[_k][MOHSIN] = st.session_state[f"ov_{_k}_m"]
+
     st.header("2  — Review Results")
     st.caption(f"Week: **{week['tab']}** ({week['start']} to {week['end']})")
 
@@ -896,35 +907,25 @@ if "results" in st.session_state:
 
     # ── OVERRIDE COUNTS ────────────────────────────────────────
     st.header("3  — Override Any Numbers (optional)")
-    st.caption("Edit counts below if the lead lists above show something that needs correcting. "
-               "These overrides flow into the sheet.")
+    st.caption("Changes apply instantly — both the rollup and individual sections update as you type.")
 
-    with st.form("overrides_form"):
-        cols = st.columns(4)
-        new_ov = {}
-        field_map = [
-            ("completions_count", "Completions",               JAWWAD, MOHSIN),
-            ("pos_count",         "Positive Completions",      JAWWAD, MOHSIN),
-            ("mbo_count",         "Mtgs Booked (Outbound)",    JAWWAD, MOHSIN),
-            ("mbsp_count",        "Mtgs Booked (Self-Prosp)",  JAWWAD, MOHSIN),
-            ("mbi_count",         "Mtgs Booked (Inbound)",     JAWWAD, MOHSIN),
-            ("conf_count",        "Mtgs Confirmed",            JAWWAD, MOHSIN),
-            ("held_count",        "Meetings Held",             JAWWAD, MOHSIN),
-        ]
-        for i, (key, label, j, m) in enumerate(field_map):
-            with cols[i % 4]:
-                st.markdown(f"**{label}**")
-                vj = st.number_input(f"{label} – Jawwad", min_value=0,
-                                     value=OV[key][j], key=f"ov_{key}_j")
-                vm = st.number_input(f"{label} – Mohsin", min_value=0,
-                                     value=OV[key][m], key=f"ov_{key}_m")
-                new_ov[key] = {j: vj, m: vm}
-
-        apply_btn = st.form_submit_button("Apply overrides")
-        if apply_btn:
-            for key, vals in new_ov.items():
-                st.session_state["overrides"][key] = vals
-            st.rerun()
+    field_map = [
+        ("completions_count", "Completions"),
+        ("pos_count",         "Positive Completions"),
+        ("mbo_count",         "Mtgs Booked (Outbound)"),
+        ("mbsp_count",        "Mtgs Booked (Self-Prosp)"),
+        ("mbi_count",         "Mtgs Booked (Inbound)"),
+        ("conf_count",        "Mtgs Confirmed"),
+        ("held_count",        "Meetings Held"),
+    ]
+    ov_cols = st.columns(4)
+    for i, (key, label) in enumerate(field_map):
+        with ov_cols[i % 4]:
+            st.markdown(f"**{label}**")
+            st.number_input(f"{label} – Jawwad", min_value=0,
+                            value=OV[key][JAWWAD], key=f"ov_{key}_j")
+            st.number_input(f"{label} – Mohsin", min_value=0,
+                            value=OV[key][MOHSIN], key=f"ov_{key}_m")
 
     # ── FINALIZE → SHEET ──────────────────────────────────────
     st.header("4  — Finalize & Write to Sheet")
