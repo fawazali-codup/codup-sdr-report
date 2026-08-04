@@ -161,6 +161,24 @@ def pull_meetings_booked_outbound(start_date, end_date):
                        and (c["properties"].get("sdr_source") or "").lower() in OUTBOUND_SOURCES]
     return out
 
+def pull_meetings_booked_selfprosp(start_date, end_date):
+    out = {JAWWAD: [], MOHSIN: []}
+    for sdr_id in [JAWWAD, MOHSIN]:
+        all_c = search_all(
+            "https://api.hubapi.com/crm/v3/objects/contacts/search",
+            {"filterGroups": [{"filters": [
+                {"propertyName": "sdr",         "operator": "EQ", "value": sdr_id},
+                {"propertyName": "completion",  "operator": "EQ", "value": "Booked"},
+                {"propertyName": "completions", "operator": "EQ", "value": "true"},
+            ]}],
+            "properties": ["firstname","lastname","completion_date","sdr_source"],
+            "limit": 100}
+        )
+        out[sdr_id] = [c for c in all_c
+                       if start_date <= (c["properties"].get("completion_date") or "") <= end_date
+                       and (c["properties"].get("sdr_source") or "").lower() == "self prospecting"]
+    return out
+
 def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
     all_mtgs = search_all(
         "https://api.hubapi.com/crm/v3/objects/meetings/search",
@@ -172,7 +190,6 @@ def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
         "limit": 50}
     )
 
-    self_prosp = {JAWWAD: [], MOHSIN: []}
     inbound    = {JAWWAD: [], MOHSIN: []}
     confirmed  = {JAWWAD: [], MOHSIN: []}
     held       = {JAWWAD: [], MOHSIN: []}
@@ -204,9 +221,7 @@ def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
             if not source:
                 continue
 
-            if source_low == "self prospecting":
-                self_prosp[sdr_id].append(entry)
-            elif source_low in ("organic",):
+            if source_low in ("organic",):
                 if lead_st == "booked" and outcome in HELD_OUTCOMES:
                     confirmed[sdr_id].append(entry)
             elif source_low == "inbound email":
@@ -229,7 +244,7 @@ def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
                     out[sdr_id].append(e)
         return out
 
-    return dedup(self_prosp), dedup(inbound), dedup(confirmed), dedup(held)
+    return dedup(inbound), dedup(confirmed), dedup(held)
 
 def pull_pipeline(s_ms, e_ms):
     all_deals = search_all(
@@ -660,12 +675,14 @@ if run_btn:
     upd(20, "Pulling meetings booked (outbound) from HubSpot…")
     mbo_raw = pull_meetings_booked_outbound(week["start"], week["end"])
 
+    upd(25, "Pulling meetings booked (self-prospecting) from HubSpot…")
+    self_prosp_raw = pull_meetings_booked_selfprosp(week["start"], week["end"])
+
     upd(30, "Fetching meeting objects — this can take a minute…")
-    total_mtgs_est = 20  # rough estimate
     def mtg_progress(idx, total):
         pct = 30 + int((idx / max(total, 1)) * 30)
         upd(pct, f"Processing meeting {idx+1}/{total}…")
-    self_prosp_raw, inbound_raw, confirmed_raw, held_raw = pull_meeting_objects(
+    _, inbound_raw, confirmed_raw, held_raw = pull_meeting_objects(
         week["s_ms"], week["e_ms"], progress_cb=mtg_progress)
 
     upd(62, "Pulling pipeline deals…")
@@ -891,7 +908,7 @@ if "results" in st.session_state:
             mbo_table(R["mbo"][sdr_id])
 
             st.markdown("**Meetings Booked (Self-Prospecting)**")
-            leads_table(R["self_prosp"][sdr_id])
+            mbo_table(R["self_prosp"][sdr_id])
 
             st.markdown("**Meetings Booked (Inbound)**")
             leads_table(R["inbound"][sdr_id])
