@@ -193,6 +193,7 @@ def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
     inbound    = {JAWWAD: [], MOHSIN: []}
     confirmed  = {JAWWAD: [], MOHSIN: []}
     held       = {JAWWAD: [], MOHSIN: []}
+    debug_rows = []
 
     for idx, m in enumerate(all_mtgs):
         if progress_cb:
@@ -204,13 +205,20 @@ def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
         ts          = str(p.get("hs_meeting_start_time", ""))[:10]
 
         if mtype != "Intro Meeting":
+            debug_rows.append({"meeting_id": m["id"], "title": title, "date": ts,
+                                "activity_type": repr(mtype), "outcome": outcome,
+                                "skip_reason": f"activity_type != 'Intro Meeting' (got {repr(mtype)})",
+                                "sdr": "", "sdr_source": "", "bucket": "SKIPPED"})
             continue
 
         contacts = get_meeting_contacts(m["id"])
+        if not contacts:
+            debug_rows.append({"meeting_id": m["id"], "title": title, "date": ts,
+                                "activity_type": mtype, "outcome": outcome,
+                                "skip_reason": "no contacts associated",
+                                "sdr": "", "sdr_source": "", "bucket": "SKIPPED"})
         for cp in contacts:
             sdr_id     = cp.get("sdr", "")
-            if sdr_id not in SDR_IDS:
-                continue
             source     = (cp.get("sdr_source") or "").strip()
             source_low = source.lower()
             lead_st    = (cp.get("hs_lead_status") or "").lower()
@@ -218,19 +226,43 @@ def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
             entry = {"title": title, "date": ts, "contact": cname,
                      "source": source, "outcome": outcome}
 
+            if sdr_id not in SDR_IDS:
+                debug_rows.append({"meeting_id": m["id"], "title": title, "date": ts,
+                                    "activity_type": mtype, "outcome": outcome,
+                                    "skip_reason": f"sdr '{sdr_id}' not in SDR_IDS",
+                                    "sdr": sdr_id, "sdr_source": source, "bucket": "SKIPPED"})
+                continue
             if not source:
+                debug_rows.append({"meeting_id": m["id"], "title": title, "date": ts,
+                                    "activity_type": mtype, "outcome": outcome,
+                                    "skip_reason": "sdr_source is blank",
+                                    "sdr": SDR_IDS[sdr_id], "sdr_source": "(blank)", "bucket": "SKIPPED"})
                 continue
 
+            bucket = "none"
             if source_low in ("organic",):
                 if lead_st == "booked" and outcome in HELD_OUTCOMES:
                     confirmed[sdr_id].append(entry)
+                    bucket = "confirmed"
+                else:
+                    bucket = "organic-skipped"
             elif source_low == "inbound email":
                 inbound[sdr_id].append(entry)
+                bucket = "inbound"
             elif source_low not in EXCLUDED_SOURCES:
                 inbound[sdr_id].append(entry)
+                bucket = "inbound"
+            else:
+                bucket = f"excluded ({source})"
 
             if outcome in HELD_OUTCOMES and source_low in OUTBOUND_SOURCES:
                 held[sdr_id].append(entry)
+                bucket += "+held"
+
+            debug_rows.append({"meeting_id": m["id"], "title": title, "date": ts,
+                                "activity_type": mtype, "outcome": outcome,
+                                "skip_reason": "", "sdr": SDR_IDS[sdr_id],
+                                "sdr_source": source, "bucket": bucket})
 
     # dedup each bucket
     def dedup(d):
@@ -244,7 +276,7 @@ def pull_meeting_objects(s_ms, e_ms, progress_cb=None):
                     out[sdr_id].append(e)
         return out
 
-    return dedup(inbound), dedup(confirmed), dedup(held)
+    return dedup(inbound), dedup(confirmed), dedup(held), debug_rows
 
 def pull_pipeline(s_ms, e_ms):
     all_deals = search_all(
@@ -682,7 +714,7 @@ if run_btn:
     def mtg_progress(idx, total):
         pct = 30 + int((idx / max(total, 1)) * 30)
         upd(pct, f"Processing meeting {idx+1}/{total}…")
-    _, inbound_raw, confirmed_raw, held_raw = pull_meeting_objects(
+    _, inbound_raw, confirmed_raw, held_raw, mtg_debug = pull_meeting_objects(
         week["s_ms"], week["e_ms"], progress_cb=mtg_progress)
 
     upd(62, "Pulling pipeline deals…")
@@ -719,6 +751,7 @@ if run_btn:
         "batch_total": batch_total,
         "social":      social_raw,
         "social_tab":  social_tab,
+        "mtg_debug":   mtg_debug,
     }
     # Counts (overrideable)
     st.session_state["overrides"] = {
@@ -921,6 +954,13 @@ if "results" in st.session_state:
 
             st.markdown("**Pipeline Deals**")
             pipeline_table(R["pipeline"][sdr_id])
+
+    # ── DEBUG: MEETING OBJECTS ─────────────────────────────────
+    with st.expander("🐛 Debug — All Meeting Objects Processed"):
+        if R.get("mtg_debug"):
+            st.dataframe(pd.DataFrame(R["mtg_debug"]), use_container_width=True, hide_index=True)
+        else:
+            st.caption("No debug data (re-run the report).")
 
     # ── OVERRIDE COUNTS ────────────────────────────────────────
     st.header("3  — Override Any Numbers (optional)")
