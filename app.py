@@ -714,7 +714,7 @@ if run_btn:
     def mtg_progress(idx, total):
         pct = 30 + int((idx / max(total, 1)) * 30)
         upd(pct, f"Processing meeting {idx+1}/{total}…")
-    _, inbound_raw, confirmed_raw, held_raw, mtg_debug = pull_meeting_objects(
+    inbound_raw, confirmed_raw, held_raw, mtg_debug = pull_meeting_objects(
         week["s_ms"], week["e_ms"], progress_cb=mtg_progress)
 
     upd(62, "Pulling pipeline deals…")
