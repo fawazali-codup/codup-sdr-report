@@ -635,9 +635,9 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
 
     reqs = []
     reqs += [fmt_row(0, 0, 8, bg=TITLEBG, fg=TITLEFG, bold=True, sz=12), merge(0, 0, 8)]
-    for r in [2, 9, 29, 49]:
+    for r in [2, 9, 28, 47]:
         reqs += [fmt_row(r, 0, 8, bg=SECT_BG, fg=SECT_FG, bold=True), merge(r, 0, 8)]
-    for r in [3, 10, 30, 50]:
+    for r in [3, 10, 29, 48]:
         reqs.append(fmt_row(r, 0, 8, bg=CHDRBG, bold=True))
     for row, c_emoji in ss_map.items():
         c = COLOR_MAP.get(c_emoji)
