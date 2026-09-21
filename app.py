@@ -1000,10 +1000,11 @@ if "results" in st.session_state:
     if st.button("✅ Finalize & Write to Sheet", type="primary",
                  disabled=(existing is not None and not overwrite)):
         with st.spinner("Writing to Google Sheets…"):
-            if existing:
-                delete_tab(svc_check, existing["properties"]["sheetId"])
-
             merged_svc = build_sheets_service()
+            # Re-check existence fresh at click time to avoid stale render state
+            current = tab_exists(merged_svc, tab_name)
+            if current:
+                delete_tab(merged_svc, current["properties"]["sheetId"])
             create_tab(merged_svc, tab_name)
 
             numeric_sid = write_kpi_sheet(tab_name, OV, tab_name,
