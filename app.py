@@ -436,17 +436,17 @@ def delete_tab(svc, sheet_id_num):
     }).execute()
 
 def create_tab(svc, tab_name):
-    import json as _json
     from googleapiclient.errors import HttpError as _HttpError
     try:
         svc.spreadsheets().batchUpdate(spreadsheetId=SHEET_ID, body={
             "requests": [{"addSheet": {"properties": {"title": tab_name}}}]
         }).execute()
     except _HttpError as e:
-        raise RuntimeError(
-            f"Google Sheets API error creating tab '{tab_name}': "
-            f"status={e.status_code}, reason={e.reason}, detail={e.error_details}"
-        ) from e
+        st.error(f"**Google Sheets error** creating tab `{tab_name}`\n\n"
+                 f"- Status: `{e.status_code}`\n"
+                 f"- Reason: `{e.reason}`\n"
+                 f"- Details: `{e.error_details}`")
+        st.stop()
     meta = svc.spreadsheets().get(spreadsheetId=SHEET_ID).execute()
     return next(s["properties"]["sheetId"] for s in meta["sheets"]
                 if s["properties"]["title"] == tab_name)
