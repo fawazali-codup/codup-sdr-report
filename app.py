@@ -526,8 +526,8 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
         ["Meetings Booked (Outbound)",         str(t_mbo),   ">= 2",    "2+",       "1",        "0"],
         ["Meetings Booked (Self-Prospecting)", str(t_mbsp),  ">= 1",    "1+",       "—",        "0"],
         ["Meetings Booked (Inbound)",          str(t_mbi),   "—","—","—","— (reading)"],
-        ["Meetings Confirmed (Inbound)",       str(t_conf),  "—","—","—","— (reading)"],
-        ["Meetings Held",                      str(t_held),  ">= 2",    "60-70% show rate","50%","40%"],
+        ["Meetings Held (Inbound)",            str(t_conf),  "—","—","—","— (reading)"],
+        ["Meetings Held (Outbound)",           str(t_held),  ">= 2",    "60-70% show rate","50%","40%"],
         ["New Qualified Pipeline",             fmt_amt(t_pipe), "$50,000","—","—","—"],
         [],
         ["JAWWAD RASOOL"],
@@ -545,8 +545,8 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
         ["Meetings Booked (Outbound)",         str(j_mbo)],
         ["Meetings Booked (Self-Prospecting)", str(j_mbsp)],
         ["Meetings Booked (Inbound)",          str(j_mbi)],
-        ["Meetings Confirmed (Inbound)",       str(j_conf)],
-        ["Meetings Held",                      str(j_held)],
+        ["Meetings Held (Inbound)",            str(j_conf)],
+        ["Meetings Held (Outbound)",           str(j_held)],
         ["New Qualified Pipeline",             fmt_amt(j_pipe)],
         [],
         ["MOHSIN ALI KHAN"],
@@ -564,8 +564,8 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
         ["Meetings Booked (Outbound)",         str(m_mbo)],
         ["Meetings Booked (Self-Prospecting)", str(m_mbsp)],
         ["Meetings Booked (Inbound)",          str(m_mbi)],
-        ["Meetings Confirmed (Inbound)",       str(m_conf)],
-        ["Meetings Held",                      str(m_held)],
+        ["Meetings Held (Inbound)",            str(m_conf)],
+        ["Meetings Held (Outbound)",           str(m_held)],
         ["New Qualified Pipeline",             fmt_amt(m_pipe)],
     ]
 
@@ -889,8 +889,8 @@ if "results" in st.session_state:
         ("Meetings Booked (Outbound)",         str(t_mbo),    color("mbo",t_mbo)),
         ("Meetings Booked (Self-Prospecting)", str(t_mbsp),   color("mbsp",t_mbsp)),
         ("Meetings Booked (Inbound)",          str(t_mbi),    ""),
-        ("Meetings Confirmed (Inbound)",       str(t_conf),   ""),
-        ("Meetings Held",                      str(t_held),   color("held",t_held)),
+        ("Meetings Held (Inbound)",            str(t_conf),   ""),
+        ("Meetings Held (Outbound)",           str(t_held),   color("held",t_held)),
         ("New Qualified Pipeline",             f"${t_pipe:,.0f}", color("pipeline",t_pipe)),
     ]
     st.dataframe(
@@ -930,8 +930,8 @@ if "results" in st.session_state:
             ("Meetings Booked (Outbound)",         str(j_mbo2)),
             ("Meetings Booked (Self-Prospecting)", str(j_mbsp2)),
             ("Meetings Booked (Inbound)",          str(j_mbi2)),
-            ("Meetings Confirmed (Inbound)",       str(j_conf2)),
-            ("Meetings Held",                      str(j_held2)),
+            ("Meetings Held (Inbound)",            str(j_conf2)),
+            ("Meetings Held (Outbound)",           str(j_held2)),
             ("New Qualified Pipeline",             f"${j_pipe2:,.0f}"),
         ]
         st.dataframe(
@@ -954,10 +954,10 @@ if "results" in st.session_state:
             st.markdown("**Meetings Booked (Inbound)**")
             leads_table(R["inbound"][sdr_id])
 
-            st.markdown("**Meetings Confirmed (Inbound)**")
+            st.markdown("**Meetings Held (Inbound)**")
             leads_table(R["confirmed"][sdr_id])
 
-            st.markdown("**Meetings Held**")
+            st.markdown("**Meetings Held (Outbound)**")
             leads_table(R["held"][sdr_id])
 
             st.markdown("**Pipeline Deals**")
@@ -980,8 +980,8 @@ if "results" in st.session_state:
         ("mbo_count",         "Mtgs Booked (Outbound)"),
         ("mbsp_count",        "Mtgs Booked (Self-Prosp)"),
         ("mbi_count",         "Mtgs Booked (Inbound)"),
-        ("conf_count",        "Mtgs Confirmed"),
-        ("held_count",        "Meetings Held"),
+        ("conf_count",        "Mtgs Held (Inbound)"),
+        ("held_count",        "Mtgs Held (Outbound)"),
     ]
     ov_cols = st.columns(4)
     for i, (key, label) in enumerate(field_map):
