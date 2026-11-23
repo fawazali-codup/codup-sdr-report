@@ -478,7 +478,7 @@ def write_kpi_sheet(tab_name, d, week_label, monday, friday):
     j_comp  = d["completions_count"][j]; m_comp = d["completions_count"][m]
     j_pos   = d["pos_count"][j];         m_pos  = d["pos_count"][m]
     t_comp  = j_comp + m_comp;           t_pos  = j_pos + m_pos
-    j_cr    = pct(j_comp, j_dials); m_cr = pct(m_comp, m_dials); t_cr = pct(t_comp, t_dials)
+    j_cr    = pct(j_comp, j_conv);  m_cr = pct(m_comp, m_conv);  t_cr = pct(t_comp, t_conv)
     j_pr    = pct(j_pos, j_comp);   m_pr = pct(m_pos, m_comp);   t_pr = pct(t_pos, t_comp)
 
     j_mbo   = d["mbo_count"][j]; m_mbo = d["mbo_count"][m]; t_mbo = j_mbo + m_mbo
@@ -883,7 +883,7 @@ if "results" in st.session_state:
         ("Email Volume",                       str(t_email),  color("email",t_email)),
         ("Social Prospecting Reach Out",       str(t_soc),    color("social",t_soc)),
         ("Completions",                        str(t_comp),   color("completions",t_comp)),
-        ("Completion Ratio",                   _pct(t_comp,t_dials), ""),
+        ("Completion Ratio",                   _pct(t_comp,t_conv), ""),
         ("Positive Completions",               str(t_pos),    color("pos_completions",t_pos)),
         ("Positive Completions Ratio",         _pct(t_pos,t_comp), ""),
         ("Meetings Booked (Outbound)",         str(t_mbo),    color("mbo",t_mbo)),
@@ -924,7 +924,7 @@ if "results" in st.session_state:
             ("Email Volume",                       str(j_email2)),
             ("Social Prospecting Reach Out",       str(j_soc2)),
             ("Completions",                        str(j_comp2)),
-            ("Completion Ratio",                   _pct(j_comp2,j_dials2)),
+            ("Completion Ratio",                   _pct(j_comp2,j_conv2)),
             ("Positive Completions",               str(j_pos2)),
             ("Positive Completions Ratio",         _pct(j_pos2,j_comp2)),
             ("Meetings Booked (Outbound)",         str(j_mbo2)),
